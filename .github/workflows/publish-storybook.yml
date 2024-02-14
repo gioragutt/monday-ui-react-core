@@ -11,21 +11,21 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Run Setup
+        uses: ./.github/actions/setup
         with:
-          node-version-file: ".nvmrc"
-      - name: Build & deploy Storybook to GitHub Pages
-        run: |
-          yarn
-          yarn lerna run --scope monday-ui-react-core build-storybook
-          cd packages/core/static_storybook
-          echo "style.monday.com" > ./CNAME
+          npm_token: ${{ secrets.npm_token }}
+      - name: Run Build
+        shell: bash
+        run: yarn lerna run build --since=origin/master --include-filtered-dependencies
+      - run: echo "style.monday.com" > ./packages/core/static_storybook/CNAME
+        shell: bash
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
       - name: Push to Storybook's branch
         if: success()
-        uses: crazy-max/ghaction-github-pages@v2
+        uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: "gh-pages"
           build_dir: packages/core/static_storybook
